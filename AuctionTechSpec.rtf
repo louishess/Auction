@@ -1,0 +1,108 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2580
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;\f1\fnil\fcharset0 HelveticaNeue;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue0;\red60\green60\blue60;}
+{\*\expandedcolortbl;;\cssrgb\c0\c0\c0;\cssrgb\c30196\c30196\c30196;}
+\margl1440\margr1440\vieww13500\viewh15300\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 \
+Original Auction Design: Louis Hess\
+Auction Tech Spec: Lana Lim\
+\
+\
+\'97All Methods are listed in Priority order\'97\
+\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+\cf0 \
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\fs36 \cf0 ACCOUNT\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\fs24 \cf0 Represents a user\
+\
+VARIABLES\
+username \
+userID\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+\cf0 \
+
+\fs36 AUCTION
+\fs24 \
+Primary object representing a single auction\
+\
+VARIABLES\
+int minimumBid - minimumBid \
+bool hasImmediateBuying - indicates whether the Auction has a price that would immediately by the object\
+int buyNowPrice - Price set by Auctioneer that would immediately buy the object without entering the auction\
+int biddingDuration- Duration of time for bidding, maximum is 48 hours\
+int startingPrice\
+int auctionFee\
+constant maximumDurationHours - represents 48 hours\
+boolean sendToLouis - 1/1000 chance of being true, activates sendDirectToLouisWallet \
+boolean auctionReadyToBegin - flag that signals when everything is valid to begin auction, default is false\
+List interactions - documents all people interacting with auction, this is both the auctioneer and all bidders. When Auction object is created, the account that created it(the auctioneer) is stored here\
+\
+\
+\
+METHODS:\
+\cf2 \
+setUpAuction- Sets the parameters for the auction, including duration of time, minimumBid, hasImmediateBuying and buyNowPrice(if applicable), and validatesNFT. Can set up individual parameters at a time, or all at once.\
+\
+validateNFT - checks if NFT is in the possession of the auctioneer, given data of NFT and some kind of verification\
+\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+\cf2 prepareAuction - Used before the Auction can begin. \
+Checks if:\
+	-user has ownership of the NFT\
+	-biddingDuration is less than or equal to the 48 hour time limit\
+	- minimumBid and starting price are valid( >0)\
+	- calculates auction fee, \
+If all of these are valid, then set auctionReadyToBegin to true, otherwise, show a specific error, and redirect to setUpAuction again\
+\cf0 \
+calculateAuctionFee - uses biddingPrice and auctionDuration, create auctionFee. auctionFee should never be 0\
+\cf2 \
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+\cf2 storeBids-Takes in bids and stores amount and user identification in a stack. At the same time, documents bidder account in list of interactions. if there\'92s immediate buying then if somebody bids the buyNowPrice, the Auction ends and exits the method. Otherwise, continue taking bids until duration of time has ended. If the time ends and there are no bids, the Auction is set to null.\
+\
+sendNFTtoBidder - Used once a final bid is reached, transfers ownership of NFT to Bidder\
+\
+\
+\
+sendDirectToLWallet( amount) - sends half of amount to 0xE2eE05AA87B74AE069F551259f015661981b97ee and the other half to  
+\f1 \expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec3 0x2AD7aA2A14A761C4e2EF3089d6DcCB204aFc3534 
+\f0 \cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 when constructing an auction, display error message \'93Transaction error occurred. Devs have been notified\'94, \
+\
+\
+\
+\
+
+\fs36 AUCTION HOUSE
+\fs24 \
+\
+Manages all auctions \
+\
+OBJECTS/VARIABLES\
+Hashmap pendingAuctions - represents all newly created, unverified auctions, invisible to users\
+Hashmap allCurrentAuctions - represents all ongoing auctions, all users can see and interact with these auctions\
+Hashmap pastAuctions- holds compresses records of previous auctions, only people who have interacted with specific past auction(bidders and auctioneer) can see it.\
+\
+METHODS:\
+\
+createAuction - creates Auction object and stores in pendingAuctions\
+\
+beginAuction-  Checks if the auction\'92s auctionReadyToBegin is true, then gets the calculated Auction Fee. Transfers auction to allCurrentAuctions If somebody wants to bid, they have to transfer the auctionFee. Once there is confirmation that this fee has been paid, the bidder can input the amount they will bid. This will be stored in the indvidual Auction object via the storeBids method.\
+\
+finishAuction - compressData to a record of the Auction and stores in pastAuctions, removes actually auction object from allCurrentAuctions\
+\
+compressData - created documentation of a single Auction by noting the interactions, biddingDuration, minimumBid, final bid, new owner of the NFT, information about the NFT, whether or not the auction had immediate buying(and what the buyNowPrice was), and the auctionFee\
+\
+viewPastAuction - takes in identifier for a users, checks if the corresponding auction has documentation of them as a bidder or auctioneer in the interactions list. If this is true, then allows the user to view information about this past auction \
+\
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\fs36 \cf0 NOTABLE CHANGES FROM ORIGINAL DESIGN:\
+
+\fs24 -Auction House status does not changed based on Mondays, is open all days of the week\
+}
